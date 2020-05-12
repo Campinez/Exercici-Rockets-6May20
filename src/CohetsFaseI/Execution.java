@@ -8,7 +8,7 @@ public class Execution {
 	static ArrayList<Rockets> fleet= new ArrayList <Rockets>();
 	 
 	public  static void main(String[] args) {
-		fleet.add(fleet.size(),new Rockets("x", 3));
+		
 		fleet.add(fleet.size(),new Rockets("LDSFJA32", 6));
 		Entry();
 	}
