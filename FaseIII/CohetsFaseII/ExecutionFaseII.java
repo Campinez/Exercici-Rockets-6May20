@@ -3,8 +3,8 @@ import java.util.ArrayList;
 import java.util.InputMismatchException;
 import java.util.Scanner;
 public class ExecutionFaseII {
-	
 	static ArrayList<RocketsFaseII> fleet= new ArrayList <RocketsFaseII>();
+	
 	public  static void main(String[] args) {
 		//Instancio primer cohete
 		RocketsFaseII first=new RocketsFaseII("LDSFJA32",3);
@@ -15,7 +15,7 @@ public class ExecutionFaseII {
 		first.thrustersList.add(0, two);
 		ThrustersFaseII three= new ThrustersFaseII(0,10);
 		first.thrustersList.add(0, three);
-		//Instancio segindo cohete y propulsores
+		//Instancio segundo cohete y propulsores
 		RocketsFaseII second=new RocketsFaseII(" ",6);
 		fleet.add(fleet.size(),second);
 		ThrustersFaseII one2= new ThrustersFaseII(5,10);
@@ -31,43 +31,70 @@ public class ExecutionFaseII {
 		ThrustersFaseII six2= new ThrustersFaseII(0,30);
 		second.thrustersList.add(0, six2);
 
-//Ejecución menú inicio
-		Entry();
-		}
-
-//Menu inicio
-		private static void Entry()throws IndexOutOfBoundsException {
+//Primera Ejecución menú inicio
+		try {
+			Scanner dataEntry = new Scanner(System.in);
+			System.out.println("What do you want to do? 1-JOIN A NEW ROCKET  2-SEE THE FLEET  3-SEE ROCKET DATA AND POWER  4-SET POWER OF A ROCKET");
+			int enterOption=dataEntry.nextInt();
+			switch (enterOption) {
+				case 1:
+					NewRocket();
+					Entry();
 			
-			try {
-				Scanner dataEntry = new Scanner(System.in);
-				System.out.println("What do you want to do? 1-JOIN A NEW ROCKET  2-SEE THE FLEET  3-SEE ROCKET DATA AND POWER  4-SET POWER OF A ROCKET");
-				int enterOption=dataEntry.nextInt();
-				switch (enterOption) {
-					case 1:
-						NewRocket();
-						Entry();
-				
-					case 2:
-						RocketData();
-						Entry();
-				
-					case 3:
-						SeeRocketPower();
-						Entry();
-					case 4:
-						SetPower();
-						Entry();
-					default:
-						Entry();
-				}
-			}catch(IndexOutOfBoundsException e ){
-				System.out.println("Wrong option!!");
-				Entry();
+				case 2:
+					RocketData();
+					Entry();
+				case 3:
+					SeeRocketPower();
+					Entry();
+				case 4:
+					SetPower();
+					Entry();
+				default:
+					return;
 			}
+		}catch(IndexOutOfBoundsException e ){
+			System.out.println("Wrong option!!");
+			return;
 		}
 		
+		
+	}
+	
+	//Menu inicio en método
+	public static void Entry() {
+		
+		try {
+			Scanner dataEntry = new Scanner(System.in);
+			System.out.println("What do you want to do? 1-JOIN A NEW ROCKET  2-SEE THE FLEET  3-SEE ROCKET DATA AND POWER  4-SET POWER OF A ROCKET");
+			int enterOption=dataEntry.nextInt();
+			switch (enterOption) {
+				case 1:
+					NewRocket();
+					Entry();
+			
+				case 2:
+					RocketData();
+					Entry();
+				case 3:
+					SeeRocketPower();
+					Entry();
+				case 4:
+					SetPower();
+					Entry();
+				default:
+					return;
+			}
+		}catch(IndexOutOfBoundsException e ){
+			System.out.println("Wrong option!!");
+			return;
+		}
+		
+	}
+
+
 //Método para variar velocidad propulsores( Pantallazo de datos (Cohete y cantidad propulsores), elección cohete y acelerar o frenar		
-		private  static void SetPower()throws InputMismatchException  {
+		protected  static void SetPower()throws InputMismatchException  {
 				
 			for (int i=0; i<fleet.size();i++) {
 					RocketsFaseII e=fleet.get(i);
@@ -78,165 +105,43 @@ public class ExecutionFaseII {
 				System.out.println("Type the number of rocket you want to accelerate or brake");
 				int enterOption=dataEntry.nextInt();
 				fleet.get(enterOption);
-				System.out.println("What maneuver do you want to perform?: 1-ACCELERATE 2-BRAKE");
-				int enterOption1=dataEntry.nextInt();
-				switch (enterOption1) {
-					case 1:
-						Accelerate(enterOption);
-						Entry();
-					case 2:
-						Brake(enterOption);
-						Entry();
+				RocketsFaseII e=fleet.get(enterOption);
+				System.out.println("The "+ e.getName()+" rocket has "+e.getThrustersNumber()+" thrusters at current power:");
+				for (int j=0;j<e.getThrustersList().size();j++) {
+					ThrustersFaseII f=e.thrustersList.get(j);
+					System.out.println("The maximum power of thruster "+j+" is "+f.getPowerMax()+ " and the current power is " + f.getPowerActuallyThruster());
+					}
+				for (int j=0;j<e.getThrustersList().size();j++) {
+					ThrustersFaseII f=e.thrustersList.get(j);
+					int powerDifference = 0;
+					boolean action = false;
+	//Recoge el nuevo valor para el propulsor designado y descarta darle una potencia por encima de la suya máxima
+					System.out.println("Type the new power target of thruster "+j+" is:");
+					
+					int newPower=dataEntry.nextInt();
+					while (newPower >f.getPowerMax()) {
+						System.out.println("You're wrong. The maximum power of this thruster is "+f.getPowerMax());
+						System.out.println("Type the new power target of thruster "+j+" is:");
+						newPower=dataEntry.nextInt();
+						
+					}
+					if ( f.getPowerActuallyThruster()>=newPower) {
+						powerDifference= f.getPowerActuallyThruster()-newPower;
+						action=false;
+					}
+					if ( f.getPowerActuallyThruster()<newPower) {
+						powerDifference= newPower-f.getPowerActuallyThruster();
+						action=true;
+					}
+					Runnable r= new SetThreads(enterOption, powerDifference, j, action);
+						Thread t=new Thread(r);
+						t.start();
 				}
 			}catch(InputMismatchException e ){
 					System.out.println("Wrong option!!");
 					SetPower();
 				}
 		}
-
-		   
-//Método frenar(Le llega en la invocación la posición en el array del cohete a frenar).Informa de los las potencias actual y máxima de cada propulsor.
-		private static void Brake(int enterOption) {
-			
-			Scanner dataEntry = new Scanner(System.in);
-			RocketsFaseII e=fleet.get(enterOption);
-			System.out.println("The "+ e.getName()+" rocket has "+e.getThrustersNumber()+" thrusters at current power:");
-			for (int j=0;j<e.getThrustersList().size();j++) {
-				ThrustersFaseII f=e.thrustersList.get(j);
-				System.out.println("The maximum power of thruster "+j+" is "+f.getPowerMax()+ " and the current power is " + f.getPowerActuallyThruster());
-				}
-			for (int j=0;j<e.getThrustersList().size();j++) {
-				ThrustersFaseII f=e.thrustersList.get(j);
-
-//Recoge el nuevo valor para el propulsor designado y descarta darle una potencia por encima de la suya máxima
-				System.out.println("Type the new power target of thruster "+j+" is:");
-				
-				int newPower=dataEntry.nextInt();
-				while (newPower >f.getPowerMax()) {
-					System.out.println("You're wrong. The maximum power of this thruster is "+f.getPowerMax());
-					System.out.println("Type the new power target of thruster "+j+" is:");
-					newPower=dataEntry.nextInt();
-				}
-//Siete posibles hilos para ejecutar la variación de potencia				
-				if (j==0) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t=new Thread(r);
-					t.start();
-				}
-				if (j==1) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t1=new Thread(r);
-					t1.start();
-				}
-				if (j==2) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t2=new Thread(r);
-					t2.start();
-				}
-				if (j==3) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t3=new Thread(r);
-					t3.start();
-				}
-				if (j==4) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t4=new Thread(r);
-					t4.start();
-				}
-				if (j==5) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t5=new Thread(r);
-					t5.start();
-				}
-				if (j==6) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t6=new Thread(r);
-					t6.start();
-				}
-				if (j==7) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t7=new Thread(r);
-					t7.start();
-				}
-			}
-		}
-
-		static void Accelerate(int enterOption) throws InputMismatchException  {
-			try {	
-				
-			//Identidficación de cohetes y sus propulsores, potencias actuales y maximas.	
-			Scanner dataEntry = new Scanner(System.in);
-			RocketsFaseII e=fleet.get(enterOption);
-			System.out.println("The "+ e.getName()+" rocket has "+e.getThrustersNumber()+" thrusters at current power:");
-			for (int j=0;j<e.getThrustersList().size();j++) {
-				ThrustersFaseII f=e.thrustersList.get(j);
-				System.out.println("The maximum power of thruster "+j+" is "+f.getPowerMax()+ " and the current power is " + f.getPowerActuallyThruster());
-				}
-			
-			//Introducir los nuevos valores de potencia
-			
-			for (int j=0;j<e.getThrustersList().size();j++) {
-				ThrustersFaseII f=e.thrustersList.get(j);
-				
-				System.out.println("Type the new power target of thruster "+j+" is:");
-				
-				int newPower=dataEntry.nextInt();
-				while (newPower >f.getPowerMax()) {
-					System.out.println("You're wrong. The maximum power of this thruster is "+f.getPowerMax());
-					System.out.println("Type the new power target of thruster "+j+" is:");
-					newPower=dataEntry.nextInt();
-				}
-				if (j==0) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t=new Thread(r);
-					t.start();
-				}
-				if (j==1) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t1=new Thread(r);
-					t1.start();
-				}
-				if (j==2) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t2=new Thread(r);
-					t2.start();
-				}
-				if (j==3) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t3=new Thread(r);
-					t3.start();
-				}
-				if (j==4) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t4=new Thread(r);
-					t4.start();
-				}
-				if (j==5) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t5=new Thread(r);
-					t5.start();
-				}
-				if (j==6) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t6=new Thread(r);
-					t6.start();
-				}
-				if (j==7) {
-					Runnable r= new SetThreads(enterOption, newPower, j);
-					Thread t7=new Thread(r);
-					t7.start();
-				}
-			}
-			}catch(InputMismatchException e ){
-					System.out.println("Wrong option!!");
-			}
-			
-		}
-
-		
-		 
-		 
-		 
 //Metodo para ver cohetes con propulsores y potencia
 		private static void SeeRocketPower() {
 			for (int i=0; i<fleet.size();i++) {
@@ -288,48 +193,46 @@ public class ExecutionFaseII {
 		}
 	}
 
-
-
-
-
 //clase hilos con el runnable
 class SetThreads implements Runnable{
 	
 	//Constructor de hilos
-	public SetThreads (int enterOption, int newPower, int j ) {
+	public SetThreads (int enterOption, int powerDifference, int j, boolean action ) {
 		this.enterOption = enterOption;
-		this.newPower= newPower;
+		this.powerDifference= powerDifference;
 		this.j= j;
-		
+		this.action=action;
 	}
 	//Runnable
 	public  void run() {
 		
 		RocketsFaseII zeroRocket= ExecutionFaseII.fleet.get(enterOption);
 		ThrustersFaseII zeroThruster = zeroRocket.thrustersList.get(j);
-		if ( zeroThruster.getPowerActuallyThruster()==newPower)
-			{System.out.println("The target power and the current power are the same  ");
-		}
-		
-		if ( zeroThruster.getPowerActuallyThruster()<newPower) {
-	
-			for ( int w=zeroThruster.getPowerActuallyThruster(); w<=newPower; w++) {
-				zeroThruster.setPowerMaxThruster(newPower);
+		//Marco dos opciones de operación en función de si hay que sumar o restar potencia
+		if (action==true) {
+			for(int i =0;i<powerDifference;i++) {
+				int up=zeroThruster.getPowerActuallyThruster()+1;
+				System.out.println("The actually power of thruster "+j+" is "+ up);
+				zeroThruster.setPowerMaxThruster(up);
 			}
 		}
-		if ( zeroThruster.getPowerActuallyThruster()>newPower) {
-			
-			for ( int w=zeroThruster.getPowerActuallyThruster(); w>=newPower; w--) {
-				zeroThruster.setPowerMaxThruster(newPower);
+		if (action==false) {
+			for(int i =0;i<powerDifference;i++) {
+				int up=zeroThruster.getPowerActuallyThruster()-1;
+				System.out.println("The actually power of thruster "+j+" is "+ up);
+				zeroThruster.setPowerMaxThruster(up);
 			}
 		}
-		
-					
-				
+		return;
 	} 				
 	private int enterOption;
-	private  int newPower;
 	private  int j;
+	private int powerDifference;
+	private boolean action;
 }
+
+
+
+
 
 		
